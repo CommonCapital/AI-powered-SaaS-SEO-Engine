@@ -1,3 +1,15 @@
+interface ScrapingDataItem {
+     prompt:string;
+      answer_text: string; 
+      sources:
+       Array<{
+         title: string;
+         url: string; 
+         description: string;
+         }>; 
+         timestamp: string; 
+         url: string;
+         }
 export function systemPrompt(): string {
   return `
 You are an elite SEO intelligence analyst specializing in exhaustive, evidence-based evaluation of entities and websites. Your job is to produce a deeply analytical, fully structured SEO report by drawing exclusively from the provided scraping data. You must be maximally rigorous, maximally conservative, and adhere perfectly to the required schema.
@@ -162,4 +174,25 @@ In summary, treat the provided scraping data as the *sole source of truth*.
 Your job is to produce the **most exhaustive, deeply structured, analytically rich, evidence-anchored SEO report possible**, without ever introducing anything not explicitly present in the dataset.
 
 `.trim();
+}
+
+
+export function buildAnalysisPrompt(scrapingData: ScrapingDataItem[]): string {
+const formattedData = scrapingData.map((item, index) => ({
+id: index + 1,
+prompt: item.prompt,
+answer_text: item.answer_text,
+sources: item.sources,
+timestamp: item.timestamp,
+url: item.url,
+}));
+
+    return `
+    Analyze the following scraped data and generate a comprehensive SEO report.
+
+    SCRAPED DATA:
+    ${JSON.stringify(formattedData, null, 2)}
+
+    Generate a complete SEO report followinfg the system prompt guidelines. Return only the JSON response matching the SEO Report interface structure.
+    `.trim();
 }

@@ -56,9 +56,64 @@ import { seoReportSchema
                 system: systemPrompt(),
                 prompt: analysisPrompt,
                 schema: seoReportSchema,
-            })
+            });
+
+           console.log("SEO report generated successfully:", {
+  entity_name: seoReport.meta.entity_name,
+  entity_type: seoReport.meta.entity_type,
+  confidence_score: seoReport.meta.confidence_score,
+  total_sources: seoReport.inventory.total_sources,
+  recommendations_count: seoReport.recommendations?.length || 0,
+  summary_score: seoReport.summary?.overall_score || 0,
+});
+
+
+await ctx.runMutation(internal.scrapingJobs.saveSeoReport, {
+    jobId: args.jobId,
+    seoReport: seoReport
+});
+console.log("SEO report saved for job:", args.jobId)
+await ctx.runMutation(internal.scrapingJobs.completeJob, {
+    jobId: args.jobId
+});
+
+console.log(`Job ${args.jobId} analysis completed succesfully`);
+return null;
         } catch (error) {
-            
+           console.error("Analysis error for job:", args.jobId, error);
+           
+           try {
+            await ctx.runMutation(api.scrapingJobs.failJob, {
+                jobId: args.jobId,
+                error: error instanceof Error ? error.message : "Unknown error ocurred during analysis",
+
+            });
+            console.log(`Job ${args.jobId} marked as failed due to analysis error`);
+           } catch (error) {
+            console.error("Failed to update job status to failed:", error);
+           }
+
+
+
+           if (error instanceof Error && error.message.includes("schema")) {
+            console.error("Schema validation failed - AI response incomplete");
+            console.error("Error details:", error.message);
+           }
+
+
+           return null;
         }
+    },
+ });
+
+
+
+ export const retryAnalysisOnly = action({
+    args: {
+        jobId: v.id("scrapingJobs"),
+    },
+    returns: v.null(),
+    handler: async (ctx , args) => {
+        
     }
  })
