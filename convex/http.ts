@@ -85,13 +85,5 @@ return new Response("Initial Server Error", {status: 500});
 });
 
 
-http.route({
-    path: '/helloworld',
-    method: 'GET',
-    handler: httpAction(async (ctx, req ) => {
-        const body = await req.bytes();
-        return new Response(body, {status: 200})
-    })
-})
 
 export default http;

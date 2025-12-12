@@ -1,10 +1,14 @@
 'use client'
 import { initiateLLM } from '@/actions/initialeLLM';
-import { Card, CardHeader } from '@/components/ui/card';
+import StatusBadge from '@/components/StatusBadge/StatusBadge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/convex/_generated/api';
+import { formateDateTime, getProgressBarStyle, getProgressPercentage, getReportTitle, getStatusMessage } from '@/lib/status-utils';
 import {useUser} from '@clerk/nextjs'
 import { useQuery } from 'convex/react';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, BarChart3, Calendar, CheckCircle, FileText, Loader2, XCircle } from 'lucide-react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation'
 import React, { useState, useTransition } from 'react'
 
@@ -89,10 +93,157 @@ Track the progress of your SEO report generation
       {(job?.status === 'pending' || job?.status === "running" || job?.status==="analyzing") && (
         <Loader2 className={`w-5 h-5 animate-spin `} />
       )}
+      <StatusBadge status={job?.status} showIcon={true} />
     </div>
+    <CardTitle className='text-xl'>
+      {getReportTitle(job?.status)}
+    </CardTitle>
+    <CardDescription className='text-base'>
+      {getStatusMessage(job?.status)}
+    </CardDescription>
   </CardHeader>
+  <CardContent className='space-y-6'>
+    <div className='space-y-4'>
+<div className='flex items-center justify-between text-sm'>
+<span className='text-muted-foreground'>Progress</span>
+<span className='font-medium'>
+  {getProgressPercentage(job?.status)}
+</span>
+</div>
+<div className='w-full bg-muted rounded-full h-2'>
+<div className={`h-2 rounded-full transition-all duration-500 ${getProgressBarStyle(job?.status)}`}/>
+</div>
+  </div>
+    {/** Job Details */}
+    <div className='space-y-4 pt-4 border-t'>
+      <div className='grid gid-cols-1 sm:grid-cols-2 gap-4'>
+<div className='flex items-center gap-3'>
+<FileText className='w-4 h-4 text-muted-foreground' />
+<div>
+<p className='text-sm font-medium'>Original Query</p>
+<p className='text-sm text-muted-foreground truncate'>{job?.originalPrompt}</p>
+      </div>
+    </div>
+
+<div className='flex items-center gap-3'>
+<Calendar className='w-4 h-4 text-muted-foreground' />
+<div>
+<p className='text-sm font-medium'>Created</p>
+<p className='text-sm text-muted-foreground'>
+  {formateDateTime(job!.createdAt)}
+</p>
+</div>
+</div>
+</div>
+{job?.completedAt && (
+  <div className='flex items-center gap-3'>
+    <CheckCircle className='w-4 h-4 text-muted-foreground'/>
+    <div>
+      <p className='text-sm font-medium'>Completed</p>
+      <p className='text-sm text-muted-foreground'>{formateDateTime(job.completedAt)}</p>
+    </div>
+  </div>
+)}
+
+{job?.snapshotId && (
+  <div className='flex items-center gap-3'>
+    <BarChart3 className='w-4 h-4 text-muted-foreground'/>
+    <div>
+      <p className='text-sm font-medium'>Snapshot ID</p>
+      <p className='text-sm text-muted-foreground font-mono'>
+        {job.snapshotId}
+      </p>
+    </div>
+  </div>
+)}
+
+{job?.error && (
+<div className='p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg'>
+<div className='flex items-start gap-2'>
+  <XCircle className='w-4 h-4 text-red-600 mt-0.5 flex-shrink-0'/>
+  <div>
+    <p className='text-sm font-medium text-red-800 dark:text-red-200'>
+Error Details
+    </p>
+    <p className='text-sm text-red-700 dark:text-red-300 mt-1'>
+{job.error}
+    </p>
+  </div>
+</div>
+
+</div>
+)}
+
+</div>
+
+
+{/** Results Preview */}
+{job?.status === 'completed' && job.results && job.results.length > 0 && (
+  <div className='pt-4 border-t'>
+<div className='flex items-center gap-2 mb-3'>
+<BarChart3 className='w-4 h-4 text-green-600' />
+<p className='text-sm font-medium text-green-800 dark:text-green-200'>
+Results Available
+</p>
+</div>
+<div className='p-3 bg-green dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg'>
+<p className='text-sm text-green-700 dark:text-green-300'>
+Your data report is ready for analysis
+</p>
+</div>
+  </div>
+)}
+
+  </CardContent>
 </Card>
 
+{/** Action Buttons */}
+<div className='flex flex-col sm:flex-row gap-4 justify-center items-center'>
+{job?.status === "completed" && (
+  <Link href={`/dashboard/report/${id}/summary`}>
+    <Button
+    variant={'default'} size='lg' className='cursor-pointer bg-green-600 hover:bg-green-700 text-white'
+    >
+View Full Report 
+    </Button>
+  </Link>
+)}
+
+{job?.status === 'failed' && (
+  <div className='flex flex-col items-center gap-2'>
+    <Button
+    variant={'default'} size='lg' className='cursor-pointer' onClick={handleRetry} disabled={isPending}
+    >
+{isPending ? (
+  <>
+  <Loader2  className='w-4 h-4 animate-spin mr-2'/>
+  Retrying
+  </>
+): (
+  'Retry Report'
+)}
+
+    </Button>
+
+
+    {retryError && (
+      <p className='text-sm text-red-600 dark:text-red-400 text-center'>
+        {retryError}
+      </p>
+    )}
+
+  </div>
+)}
+
+
+
+<Link href="/dashboard">
+<Button variant={'outline'} size='lg' className='cursor-pointer'>
+
+</Button>
+</Link>
+
+</div>
 
 </div>
       </div>

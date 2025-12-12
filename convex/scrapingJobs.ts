@@ -89,7 +89,7 @@ export const saveSeoReport = internalMutation({
     },
     returns: v.null(),
     handler: async (ctx , args) => {
-        const parsed = seoReportSchema.parse(args.seoReport);
+        const parsed = seoReportSchema.safeParse(args.seoReport);
         await ctx.db.patch(args.jobId, {
             seoReport: parsed,
         });
@@ -310,6 +310,11 @@ returns: v.array(
             v.literal("completed"),
             v.literal("failed"),
         ),
+        results: v.optional(v.array(v.any())),        // ✅ Add
+      seoReport: v.optional(v.any()),               // ✅ Add
+      error: v.optional(v.string()),                // ✅ Add
+      createdAt: v.number(),                        // ✅ Add
+      completedAt: v.optional(v.number()),          // ✅ Add
     }),
 ),
 handler: async (ctx , args) => {

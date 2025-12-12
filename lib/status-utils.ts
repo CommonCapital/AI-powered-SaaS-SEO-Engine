@@ -16,7 +16,7 @@ export function getSpinnerColor(status: string): string {
 }
 
 
-export function getProgressPercentage(status: string): string {
+export function getProgressPercentage(status: string | undefined): string {
     const progressMap = {
         pending: '0%',
         running: '25%',
@@ -30,7 +30,7 @@ export function getProgressPercentage(status: string): string {
 }
 
 
-export function getProgressBarStyle(status: string): string {
+export function getProgressBarStyle(status: string | undefined): string {
     const styleMap = {
         pending: "w-0 bg-yellow-500",
         running: "w-1/4 bg-blue-500",
@@ -43,7 +43,7 @@ export function getProgressBarStyle(status: string): string {
 
 
 
-export function getReportTitle(status: string): string {
+export function getReportTitle(status: string | undefined): string {
     switch (status) {
         case 'completed':
           return 'Report Rewady!';
@@ -55,7 +55,7 @@ export function getReportTitle(status: string): string {
     }
 }
 
-export function getStatusMessage(status: string): string {
+export function getStatusMessage(status: string | undefined): string {
     switch (status) {
         case 'pending':
             return 'Your report is queued and will start processing shortly.';
@@ -74,7 +74,7 @@ export function getStatusMessage(status: string): string {
 }
 
 
-export function getStatusConfig(status: string) {
+export function getStatusConfig(status: string | undefined) {
     const statusConfig = {
         pending: {
             icon: Clock,

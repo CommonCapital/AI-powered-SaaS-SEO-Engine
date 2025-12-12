@@ -2,9 +2,10 @@
 
 import { getStatusConfig } from "@/lib/status-utils";
 import { Badge } from "../ui/badge";
+import { unauthorized } from "next/navigation";
 
 interface StatusBadgeProps {
-    status: string;
+    status: string | undefined;
     showIcon?: boolean;
 }
 
